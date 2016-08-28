@@ -1,0 +1,43 @@
+The BULK COLLECT clause, a feature of bulk SQL, returns result from SQL to PL/SQL in batches rather than one at a time. The BULK COLLECT clause can appear in: ■ SELECT INTO statement ■ FETCH statement ■ RETURNING INTO clause of: – DELETE statement – INSERT statement – UPDATE statement – EXECUTE IMMEDIATE statement
+
+ORA-22813： Operand value exceeds system limit. Set the limit dependence on the size of the PGA.
+
+如果有个大数据量的DML操作事务,在OLAP报表等低并发库里. 并且强制归档模式中.
+
+采用BULK 和FORALL 会比较快!
+
+[sql] view plain copy open cur_COLUMN_USER;
+loop
+fetch cur_COLUMN_USER bulk collect
+into
+l_ARY_statedate,
+l_ARY_form,
+l_ARY_columnid,
+l_ARY_usernumber,
+l_ARY_new_user,
+l_ARY_exit_use
+limit g_batch_size_n;
+
+forall i in 1..l_ARY_statedate.count
+insert into content_lst_day
+(......)
+values(l_ary_statedate(i),....);
+
+commit;
+end loop;
+相对使用普通游标循环提取数据出来处理的话 会快很多.
+原因 1 bulk collect into 到数组 可以一次型把数据提取出来,减少了循环当中PL/SQL和SQL引撑的切换时间
+
+Remember that collections are held in memory, so doing a bulk collect from a large query could cause a considerable performance problem. In actual fact you would rarely do a straight bulk collect in this manner. Instead you would limit the rows returned using the LIMIT clause and move through the data processing smaller chunks. This gives you the benefits of bulk binds, without hogging all the server memory.
+
+原因 2 forall in ..... 也是一次型提交数据到某个地方 也同样减少了循环当中PL/SQL和SQL引撑的切换时间
+
+注意 1 数据太大 要设置合理的LIMIT 否则提取到数组的数据会爆了PGA的回话内存， 可能会被换页到磁盘
+
+原因 3 bulk 内部操作 对insert delete 做了优化 采用批量方法.极大减少了redo 和Undo 使用量.
+
+原因 4 为证明 当一个大数据量的insert 会超级慢,如果分批插入的总时间 比一次插入省很多时间.
+
+An ORA-22813 when using BULK COLLECT is typically expected behavior indicating that you have exceeded the amount of free memory in the PGA. As collections are processed by PL/SQL they use the PGA to store their memory structures. Depending on the LIMIT size of the BULK COLLECT and additional processing of the collected data you may exceed the free memory of the PGA. While intuitively you may think that increasing the PGA memory and increasing the LIMIT size will increase performance, the following example shows you that this is not true in this case. So, by reviewing this example you should be able to strike a balance between a reasonable LIMIT size and the size of the PGA while maintaining a high level of performance using BULK COLLECT.
+
+reference: https://oracle-base.com/articles/9i/bulk-binds-and-record-processing-9i#bulk_collect
