@@ -1,0 +1,6 @@
+
+The DBMS_ERRLOG package provides a procedure that enables you to create an error logging table so that DML operations can 
+continue after encountering errors rather than abort and roll back. This enables you to save time and system resources.
+
+CREATE_ERROR_LOG Procedure：This procedure creates the error logging table needed to use the DML error logging capability. 
+LONG, CLOB, BLOB, BFILE, and ADT datatypes are not supported in the columns.
