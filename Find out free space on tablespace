@@ -19,3 +19,7 @@ SELECT  a.tablespace_name,
   WHERE b.tablespace_name(+) = a.tablespace_name 
     AND c.tablespace_name(+) = a.tablespace_name
 ORDER BY NVL (((c.BYTES - NVL (b.BYTES, 0)) / c.BYTES), 0) DESC;
+
+No tablespace will cause this problem:
+ORA-01683: unable to extend index TARTS05.DW_LOG_I2 partition SYS_P303985 by 8 in tablespace TARTS05_DATA
+
