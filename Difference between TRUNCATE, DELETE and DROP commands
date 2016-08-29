@@ -1,0 +1,71 @@
+DELETE
+
+
+The DELETE command is used to remove rows from a table. A WHERE clause can be used to only remove some rows. If no WHERE condition is specified, all rows will be removed. After performing a DELETE operation you need to COMMIT or ROLLBACK the transaction to make the change permanent or to undo it. Note that this operation will cause all DELETE triggers on the table to fire.
+
+SQL> SELECT COUNT(*) FROM emp;
+
+  COUNT(*)
+----------
+        14
+
+SQL> DELETE FROM emp WHERE job = 'CLERK';
+
+4 rows deleted.
+
+SQL> COMMIT;
+
+Commit complete.
+
+SQL> SELECT COUNT(*) FROM emp;
+
+  COUNT(*)
+----------
+        10
+
+
+
+TRUNCATE
+
+
+TRUNCATE removes all rows from a table. The operation cannot be rolled back and no triggers will be fired. As such, TRUCATE is faster and doesn't use as much undo space as a DELETE.
+
+SQL> TRUNCATE TABLE emp;
+
+Table truncated.
+
+SQL> SELECT COUNT(*) FROM emp;
+
+  COUNT(*)
+----------
+         0
+
+
+
+DROP
+
+
+The DROP command removes a table from the database. All the tables' rows, indexes and privileges will also be removed. No DML triggers will be fired. The operation cannot be rolled back. 
+
+SQL> DROP TABLE emp;
+
+Table dropped.
+
+SQL> SELECT * FROM emp;
+SELECT * FROM emp
+              *
+ERROR at line 1:
+ORA-00942: table or view does not exist
+
+ DROP and TRUNCATE are DDL commands, whereas DELETE is a DML command. Therefore DELETE operations can be rolled back (undone), while DROP and TRUNCATE operations cannot be rolled back.
+
+From Oracle 10g a table can be "undropped". Example:
+
+SQL> FLASHBACK TABLE emp TO BEFORE DROP;
+
+Flashback complete.
+
+
+
+
+reference: http://www.orafaq.com/faq/difference_between_truncate_delete_and_drop_commands
