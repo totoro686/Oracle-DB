@@ -1,0 +1,39 @@
+drop表
+执行drop table xx 语句
+    drop后的表被放在回收站(user_recyclebin)里，而不是直接删除掉。这样，回收站里的表信息就可以被恢复，或彻底清除。
+    通过查询回收站user_recyclebin获取被删除的表信息，然后使用语句
+                   flashback table <user_recyclebin.object_name or user_recyclebin.original_name> to before drop [rename to <new_table_name>];
+                   将回收站里的表恢复为原名称或指定新名称，表中数据不会丢失。
+                   若要彻底删除表，则使用语句：drop table <table_name> purge;
+                   清除回收站里的信息
+                   清除指定表：purge table <table_name>;
+                   清除当前用户的回收站：purge recyclebin;
+                   清除所有用户的回收站：purge dba_recyclebin;
+    不放入回收站，直接删除则是：drop table xx purge;
+
+
+
+
+清除表中的数据
+truncate操作 同没有where条件的delete操作十分相似，只是把表里的信息全部删除，但是表依然存在。
+例如：truncate table  XX
+Truncate不支持回滚，并且不能truncate一个带有外键的表，如果要删除首先要取消外键，然后再删除。
+truncate table 后，有可能表空间仍没有释放，可以使用如下语句：
+alter table 表名称 deallocate   UNUSED KEEP 0;
+注意如果不加KEEP 0的话，表空间是不会释放的。
+例如：
+alter table F_MINUTE_TD_NET_FHO_B7 deallocate   UNUSED KEEP 0;
+或者：
+TRUNCATE TABLE (schema)table_name DROP(REUSE) STORAGE才能释放表空间。
+例如： truncate table  test1 DROP STORAGE;
+
+
+
+
+查询用户下的表
+    如果你的用户权限不是DBA：  
+  那你用  
+  select   *   from   user_tables;  
+  可以查询到当前用户所拥有的表。  
+  如果是DBA用户：  
+  select   *   from   dba_tables;
