@@ -1,0 +1,168 @@
+1.先看一张图片，描述awr和ash的一些基础信息
+
+ 
+
+
+
+ 
+
+复制代码
+ 1 SQL> conn /as sysdba
+ 2   Connected.
+ 3   SQL> @?/rdbms/admin/awrrpt.sql
+ 4   
+ 5   Current Instance
+ 6   ~~~~~~~~~~~~~~~~
+ 7   
+ 8   DB Id DB Name Inst Num Instance
+ 9   ----------- ------------ -------- ------------
+10   3918594034 ORCL 1 orcl
+11   
+12   
+13   Specify the Report Type
+14   ~~~~~~~~~~~~~~~~~~~~~~~
+15   Would you like an HTML report, or a plain text report?
+16   Enter 'html' for an HTML report, or 'text' for plain text
+17   Defaults to 'html'
+18   Enter value for report_type: html
+19   
+20   Type Specified: html
+21   
+22   
+23   Instances in this Workload Repository schema
+24   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+25   
+26   DB Id Inst Num DB Name Instance Host
+27   ------------ -------- ------------ ------------ ------------
+28   * 3918594034 1 ORCL orcl DCMSBDM
+29   
+30   Using 3918594034 for database Id
+31   Using 1 for instance number
+32   
+33   
+34   Specify the number of days of snapshots to choose from
+35   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+36   Entering the number of days (n) will result in the most recent
+37   (n) days of snapshots being listed. Pressing <return> without
+38   specifying a number lists all completed snapshots.
+39   
+40   
+41   Enter value for num_days: 2
+42   
+43   Listing the last 2 days of Completed Snapshots
+44   
+45   Snap
+46   Instance DB Name Snap Id Snap Started Level
+47   ------------ ------------ --------- ------------------ -----
+48   kobra KOBRA 1227 20 Aug 2012 00:00 1
+49   1228 20 Aug 2012 01:00 1
+50   1229 20 Aug 2012 02:00 1
+51   1230 20 Aug 2012 03:00 1
+52   1231 20 Aug 2012 04:00 1
+53   ...
+54   1263 21 Aug 2012 12:00 1
+55   1264 21 Aug 2012 13:00 1
+56   1265 21 Aug 2012 14:00 1
+57   1266 21 Aug 2012 15:00 1
+58   
+59   
+60   Specify the Begin and End Snapshot Ids
+61   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+62   Enter value for begin_snap: 1227
+63   Begin Snapshot Id specified: 1227
+64   
+65   Enter value for end_snap: 1265
+66   End Snapshot Id specified: 1265
+67   
+68   
+69   Specify the Report Name
+70   ~~~~~~~~~~~~~~~~~~~~~~~
+71   The default report file name is awrrpt_1_1227_1265.html. To use this name,
+72   press <return> to continue, otherwise enter an alternative.
+73   
+74   Enter value for report_name:
+75   
+76   Using the report name awrrpt_1_1227_1265.html
+77   
+78   <html><head><title>AWR Report for DB: KOBRA, Inst: kobra, Snaps: 1227-1265</title>
+79   
+80   ...
+81   
+82   End of Report
+83   </body></html>
+84   Report written to awrrpt_1_1227_1265.html
+85   
+86   SQL> exit
+复制代码
+2.AWR报告分析
+
+2.1CPU负载分析
+
+如果关注数据库的性能，那么当拿到一份AWR报告的时候，最想知道的第一件事情可能就是系统资源的利用情况了，而首当其冲的，就是CPU。而细分起来，CPU可能指的是：
+
+1. OS级的User%，Sys%， Idle%
+2. DB所占OS CPU资源的Busy%
+3. DB CPU又可以分为前台所消耗的CPU和后台所消耗的CPU
+
+如果数据库的版本是11g，那么很幸运的，这些信息在AWR报告中一目了然：
+
+
+
+分析上面的图片，我们可以得出下面的结论：
+
+OS级的User%，Sys%，Idle%：
+OS级的%User为3.4，%Sys为0.4，%Idle为96.1，所以%Busy应该是100-96.1=3.9
+
+DB所占OS CPU资源的Busy%：
+DB占了OS CPU资源的3.7，%Busy CPU则可以通过上面的数据得到： %Busy CPU = %Total CPU/(%Busy) * 100 =3.7/3.9 * 100 = 94.87，应该和报告的95.3相吻合，这里有出入，我也不知道原因。
+
+Host CPU的结果来源于DBA_HIST_OSSTAT，AWR 报告里已经帮忙整出了这段时间内的绝对数据(这里的时间单位是centi second,也就是1/100秒)
+
+ 
+
+
+
+%User = USER_TIME/ (BUSY_TIME+IDLE_TIME)*100 = 1,850,185/ (2,147,757+52,550,299)*100 = 3.38
+
+%Sys = SYS_TIME/ (BUSY_TIME+IDLE_TIME)*100=234,229/ (2,147,757+52,550,299)*100=0.4
+
+%Idle = IDLE_TIME/ (BUSY_TIME+IDLE_TIME)*100=52,550,299/ (2,147,757+52,550,299)*100=96.1
+
+值得注意的，这里已经隐含着这个AWR报告所捕捉的两个Snapshot之间的时间长短了。有下面的公式：
+BUSY_TIME + IDLE_TIME = ELAPSED_TIME * CPU_COUNT
+
+注意：正确的理解这个公式可以对系统CPU资源的使用及其度量的方式有更深一步的理解。
+
+因此ELAPSED_TIME = (2,147,757+52,550,299)/6/100 = 91163.42 seconds
+
+
+
+Total DB CPU = DB CPU + Background CPU time = 20,108.16 + 357.62 = 20465.78 centi seconds
+
+Total DB CPU除以总的 BUSY_TIME + IDLE_TIME可得出% Total CPU
+
+% Total CPU = 20465.78/54698056 =3.7%，这刚好与上面Report的值相吻合。
+
+其实，在Load Profile部分，我们也可以看出DB对系统CPU的资源利用情况。
+
+
+
+用DB CPU per Second除以CPU Count就可以得到DB在前台所消耗的CPU%了。这里 0.2/6 = 3.3 %比3.7%稍小，说明DB在后台也消耗了大约0.4%的CPU，这是不是一个最简单的方法了呢？
+
+3 DB Time – 进程消耗时间分析
+
+DB CPU是一个用于衡量CPU的使用率的重要指标。假设系统有N个CPU，那么如果CPU全部处于繁忙状态的话，一秒钟内的DB CPU就是N秒。
+如何去表征一个系统的繁忙程度呢？除了利用CPU进行计算外，数据库还会利用其它计算资源，如网络、硬盘、内存等等，这些对资源的利用同样可以利用时间进行度量。假设系统有M个Session在运行，同一时刻，有的Session可能在利用CPU，有的Session可能在访问硬盘，那么，在一秒钟内，所有Session的时间加起来就可以表征系统在这一秒内的繁忙程度，一般的，这个和的最大值应该为M。这其实就是Oracle提供的另一个重要指标：DB Time，它用以衡量前端进程所消耗的总时间。 对除CPU以外的计算资源的访问，Oracle用等待事件进行描述。同样地，和CPU可分为前台消耗CPU和后台消耗CPU一样，等待事件也可以分为前台等待事件和后台等待事件。 DB Time一般的应该等于DB CPU + 前台等待事件所消耗时间的总和。等待时间通过V$SYSTEM_EVENT视图进行统计，DB Time和DB CPU则是通过同一个视图，即V$SYS_TIME_MODEL进行统计。 Load Profile一节就有了对DB Time的描述：
+
+
+
+这个系统的CPU个数是6，因此我们可以知道前台进程用了系统CPU的0.2/6=3.3%。DB Time/s为0.2，可以看出这个系统是CPU不繁忙的。里面CPU占了0.2，则其它前台等待事件占了0.2 – 0.2 = 0 Wait Time/s。DB CPU占DB Time的比重呢？ 0.2/0.2= 100%
+
+Top 5 Timed Events，或许很多人都对它有所耳闻，按照CPU/等待事件占DB Time的比例大小，这里列出了Top 5。如果一个工作负载是CPU繁忙型的话，那么在这里应该可以看到 DB CPU的影子。
+
+
+
+
+
+
+reference: http://www.cnblogs.com/david-zhang-index/archive/2012/08/21/2649252.html
