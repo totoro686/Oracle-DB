@@ -354,4 +354,7 @@ SQL> select id, cache_id, status, name from v$result_cache_objects;
  
 下面我们继续讨论Result Cache的一些特性和用途。
 
-refence link:  http://blog.itpub.net/17203031/viewspace-765994/
+reference link:  http://blog.itpub.net/17203031/viewspace-765994/
+reference link:  http://blog.itpub.net/17203031/viewspace-766211/
+reference link:  http://blog.itpub.net/17203031/viewspace-766327/
+reference link:  http://blog.itpub.net/17203031/viewspace-766948/
