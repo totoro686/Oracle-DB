@@ -1,0 +1,91 @@
+三：数据字典的使用
+    如何使用数据字典呢？
+    数据字典有三个主要的用处：
+    1：oracle 在找用户的信息，schema对象，和存储结构的时候需要数据字典
+    2：每次操作DDL(Data definition language)的时候，oracle server会修改数据字典的信息
+    3：一些授权的oralce用户能够通过select语句查看数据字典的信息。
+    PS 数据字典多使用同义的别名，使用Cache 加快访问
+    如何使用数据字典：
+    所有的数据库用户能够访问数据字典view，通过SQL语句进行访问，一些视图能够被所有的 的用户访问，但是也有些视图只能被DBA访问。
+    当数据库是open状态的时候，数据字典就可以访问了，数据字典中包含很多views，在这些视图中大概分为3中类型的视图，不同类型的views信息有不同 的前缀。
+    下面是很好的说明：
+    Prefix Scope
+    USER
+    User's view (what is in the user's schema)
+    ALL
+    Expanded user's view (what the user can access)
+    DBA
+    Database administrator's view (what is in all users' schemas)
+    
+    不同视图的区别：
+    含有USER前缀的视图通常不包含 OWNER这一列，这一列用户通常不能看到。
+    一些DBA前缀的视图包含更多列的信息。
+    三个主要的区别就是部分列的信息不同。
+    
+    USER_XXX
+    这个视图主要描述user关心的信息：
+    1：有用户自己在数据库中的私有环境，包括被用户创建的schema对象信息 和用户的权限信息。
+    2：显示用户和用户相关的列
+    3：和 ALL_XXX 的view相比没有OWNER列，其他都一致。
+    4：根据第三条返回的结果当然是 ALL_VIEW的子集了 subset 简直是废话；
+    例如：SELECT object_name, object_type FROM USER_OBJECTS;
+    
+    ALL_XXX
+    SELECT owner, object_name, object_type FROM ALL_OBJECTS;
+    DBA_XXX
+    SELECT owner, object_name, object_type FROM SYS.DBA_OBJECTS;
+    数据字典一览表： select table_name from dictionary;  
+    
+    动态性能视图（dynamic performance V$ views）
+    11g联机文档参考
+    重要参考
+    动态性能视图：
+    1：virtural tables 数据库信息以表的形式展示出来
+    2：记录了数据库当前的活动情况
+    3：当操作的时候会时不时的更新
+    4：动态性能表的信息来自 内存 和 控制文件中
+    5：主要作用： 监控和调优数据库
+    6：owner 所有者 ： sys用户
+    7： 表名开始于V$
+    8:动态性能表的一览表在 V$FIXED_TABLE;
+    
+    DESC v$FIXED_TABLE
+    
+    一些常用的动态性能表：
+    V$contrllfile 系统中的控制文件
+    v$parameter 数据库参数信息
+    v$spparameter
+    v$SGA
+    V$TABLESPACE
+    V$THREAD
+    等表信息
+    在oracle online document中
+    
+    动态视图对于实时的监控数据库的性能非常有用：
+    下面讲讨论三点：
+    1：动态视图的目的（为什么要有动态视图）
+    2：动态视图的体系
+    3：动态视图的使用
+    
+    1：The purpose of the Dynamic Performance Views
+    动态视图能够实时监控oracle的内脏，就相当人的各部部分的健康等，监控oracle各个部分的性能。
+    数据字典和动态视图有什么不同呢？
+    这样想像一下：数据字典像一对零件，它列出了一个汽车的所有的部分，显示了这些汽车零件的在汽车中的位置这
+    很容易理解，如果你想替换其中的一些零件，如果你想调整汽车的速度，换零件是一个不可取的选择。
+    
+    V$动态视图就像汽车的车速计和转速计，它将告诉我们当前汽车的速度多快，通过通过调速灯帮助我们调节速度，数据库也一样，动态视图提供了数据库各个部分状况的反馈。
+    
+    2：动态性能视图的体系结构
+    动态性能视图是一种很低级的oracle视图，我们很少需要去访问它，这些视图叫做X$ ，这个视图反应了oracle内部的结构。
+    X$视图位于oracle的底层，一般不是高手不要访问了。V$是创建在X$之上的视图，我觉得V$视图是X$的同义，最好利用V$去查询。
+    
+    V$视图的使用：
+    下面是一些使用V$视图的例子：
+    如果ORACLE DBA想知道 who 连接这个系统，下列查询能够满足这个要求：
+    [sql]
+    SQL> select sid, serial#, username, osuser, machine from v$session 
+      2 where username is not NULL; 
+    注意 这个sid ，serial#列是一个连接到oracle数据库的用户一个标示。username是连接到数据库的用户名，OSUSER列显示连接到数据库的用户的操作系统名称，
+    在oracle中有很多动态性能视图，提供了很多有价值的信息。
+
+reference link: http://www.dedecms.com/knowledge/data-base/oracle/2013/0626/31037_2.html
