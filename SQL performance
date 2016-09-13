@@ -1,3 +1,7 @@
 1. The key to correct join order is to keep the intermediary row-set sizes as small as possible throughout query execution.
+   
+   •	If a strategy was to use LEAST NUMBER OF ROWS rather than LEAST PERCENTAGE OF ROWS as the method for reducing workload, 
+   then it would tend to pick smaller tables over larger tables as driving tables regardless of filtering criteria.
+
 
 2. 
