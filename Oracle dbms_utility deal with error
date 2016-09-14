@@ -1,0 +1,89 @@
+dbms_utility.format_call_stack
+
+
+This Function Formats The Current Call Stack. This Can Be Used On Any Stored Procedure Or Trigger To Access The Call Stack. This Can Be Useful For Debugging.
+
+
+dbms_utility.format_error_stack
+
+
+
+This Function Formats The Current Error Stack. This Can Be Used In Exception Handlers To Look At The Full Error Stack.
+
+
+dbms_utility.format_error_backtrace
+
+
+This Procedure Displays The Call Stack At The Point Where An Exception Was Raised, Even If The Procedure Is Called From An Exception Handler In An Outer Scope. The Output Is Similar To The Output Of The Sqlerrm Function, But Not Subject To The Same Size Limitation.
+
+
+
+
+
+view plaincopy to clipboard
+01.Create Or Replace Package pkg_public_back As  
+02.  
+03.  Procedure p_test;  
+04.  
+05.End pkg_public_back;  
+06./  
+07.  
+08.Create Or Replace Package Body pkg_public_back As  
+09.  Procedure p_test3 As  
+10.    a Number;  
+11.  Begin  
+12.    a := 0 / 0;  
+13.  Exception  
+14.    When Others Then  
+15.      Raise;  
+16.  End p_test3;  
+17.  
+18.  Procedure p_test2 As  
+19.  Begin  
+20.    p_test3;  
+21.  Exception  
+22.    When Others Then  
+23.      Raise;  
+24.  End p_test2;  
+25.  
+26.  Procedure p_test As  
+27.  Begin  
+28.    p_test2;  
+29.  Exception  
+30.    When Others Then  
+31.      dbms_output.put_line('----format_call_stack----');  
+32.      dbms_output.put_line(dbms_utility.format_call_stack);  
+33.      dbms_output.put_line('-------------------------');  
+34.      dbms_output.put_line('----format_error_stack----');  
+35.      dbms_output.put_line(dbms_utility.format_error_stack);  
+36.      dbms_output.put_line('-------------------------');  
+37.      dbms_output.put_line('----format_error_backtrace----');  
+38.      dbms_output.put_line(dbms_utility.format_error_backtrace);  
+39.      dbms_output.put_line('-------------------------');  
+40.  End p_test;  
+41.  
+42.End pkg_public_back;  
+43./  
+
+
+ ----format_call_stack---- 
+ ----- PL/SQL Call Stack ----- 
+   object      line  object 
+   handle    number  name 
+ 32A86CF4        25  package body SCOTT.PKG_PUBLIC_BACK 
+ 3297A3D0         2  anonymous block 
+
+
+ ------------------------- 
+ ----format_error_stack---- 
+ ORA-01476: 除数为 0 
+
+
+ ------------------------- 
+ ----format_error_backtrace---- 
+ ORA-06512: 在 "SCOTT.PKG_PUBLIC_BACK", line 16 
+ ORA-06512: 在 "SCOTT.PKG_PUBLIC_BACK", line 21 
+
+
+
+reference link: http://www.programgo.com/article/84642835716/
