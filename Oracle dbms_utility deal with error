@@ -21,49 +21,49 @@ This Procedure Displays The Call Stack At The Point Where An Exception Was Raise
 
 
 view plaincopy to clipboard
-01.Create Or Replace Package pkg_public_back As  
-02.  
-03.  Procedure p_test;  
-04.  
-05.End pkg_public_back;  
-06./  
-07.  
-08.Create Or Replace Package Body pkg_public_back As  
-09.  Procedure p_test3 As  
-10.    a Number;  
-11.  Begin  
-12.    a := 0 / 0;  
-13.  Exception  
-14.    When Others Then  
-15.      Raise;  
-16.  End p_test3;  
-17.  
-18.  Procedure p_test2 As  
-19.  Begin  
-20.    p_test3;  
-21.  Exception  
-22.    When Others Then  
-23.      Raise;  
-24.  End p_test2;  
-25.  
-26.  Procedure p_test As  
-27.  Begin  
-28.    p_test2;  
-29.  Exception  
-30.    When Others Then  
-31.      dbms_output.put_line('----format_call_stack----');  
-32.      dbms_output.put_line(dbms_utility.format_call_stack);  
-33.      dbms_output.put_line('-------------------------');  
-34.      dbms_output.put_line('----format_error_stack----');  
-35.      dbms_output.put_line(dbms_utility.format_error_stack);  
-36.      dbms_output.put_line('-------------------------');  
-37.      dbms_output.put_line('----format_error_backtrace----');  
-38.      dbms_output.put_line(dbms_utility.format_error_backtrace);  
-39.      dbms_output.put_line('-------------------------');  
-40.  End p_test;  
-41.  
-42.End pkg_public_back;  
-43./  
+Create Or Replace Package pkg_public_back As  
+  
+  Procedure p_test;  
+  
+End pkg_public_back;  
+/  
+  
+Create Or Replace Package Body pkg_public_back As  
+  Procedure p_test3 As  
+    a Number;  
+  Begin  
+    a := 0 / 0;  
+  Exception  
+    When Others Then  
+      Raise;  
+  End p_test3;  
+  
+  Procedure p_test2 As  
+  Begin  
+    p_test3;  
+  Exception  
+    When Others Then  
+      Raise;  
+  End p_test2;  
+  
+  Procedure p_test As  
+  Begin  
+    p_test2;  
+  Exception  
+    When Others Then  
+      dbms_output.put_line('----format_call_stack----');  
+      dbms_output.put_line(dbms_utility.format_call_stack);  
+      dbms_output.put_line('-------------------------');  
+      dbms_output.put_line('----format_error_stack----');  
+      dbms_output.put_line(dbms_utility.format_error_stack);  
+      dbms_output.put_line('-------------------------');  
+      dbms_output.put_line('----format_error_backtrace----');  
+      dbms_output.put_line(dbms_utility.format_error_backtrace);  
+      dbms_output.put_line('-------------------------');  
+  End p_test;  
+  
+End pkg_public_back;  
+/  
 
 
  ----format_call_stack---- 
