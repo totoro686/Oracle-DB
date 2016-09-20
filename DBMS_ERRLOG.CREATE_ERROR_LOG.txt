@@ -4,3 +4,10 @@ continue after encountering errors rather than abort and roll back. This enables
 
 CREATE_ERROR_LOG Procedure：This procedure creates the error logging table needed to use the DML error logging capability. 
 LONG, CLOB, BLOB, BFILE, and ADT datatypes are not supported in the columns.
+
+INSERT /*+ APPEND */ INTO table_name SUBPARTITION( subpartition_name ) SELECT * FROM table_name WHERE business_date= '2016-01-01'' AND site_code= 'CN' LOG ERRORS REJECT LIMIT UNLIMITED;
+
+
+reference link: http://www.voidcn.com/blog/fsldg/article/p-1186874.html
+                http://docs.oracle.com/database/121/ARPLS/d_errlog.htm#ARPLS66324
+                http://docs.oracle.com/database/121/ADMIN/tables.htm#ADMIN-GUID-36DB026B-4702-477A-92C4-EA2795D2B37F
