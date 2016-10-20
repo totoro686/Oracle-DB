@@ -1,6 +1,1 @@
-/** java往oracle存储过程中传递数组方法小结，下面是一个例子，比如存储过程中要 接受一个数组，并且输出一个数组，则先注意数组在oracle中的定义方法如下： 
-CREATE TYPE array_table AS TABLE OF VARCHAR2 (50); -- Array of String 
-CREATE TYPE array_int AS TABLE OF NUMBER;          -- Array of integers 
-接下来，一个存储过程，接受一个数组的输入，一个数组的输出，如下： **/
-CREATE OR REPLACE PROCEDURE SchemaName.proc1 (p_array     IN     array_table,                                                len         OUT    NUMBER,                                                          p_arr_int   OUT    array_int) AS   v_count   NUMBER;BEGIN   p_arr_int := NEW array_int ();   p_arr_int.EXTEND (10);     len := p_array.COUNT;   v_count := 0;     FOR i IN 1 .. p_array.COUNT   LOOP         DBMS_OUTPUT.put_line (p_array (i));       p_arr_int (i) := v_count;        v_count := v_count + 1;     END LOOP;END;/  
-
+http://jackyrong.iteye.com/blog/1669733
