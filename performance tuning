@@ -1,4 +1,4 @@
-4.	Optimization tips
+Optimization tips
 This will help to optimize the performance of plsql/sql and also for ease maintenance of the code. 
 a.)	Be aware of your tables’ expected content, data volume and use within the application.
 Reason: Design your table properly by using primary key, constraint, index, partition to define your preferred access path when you use it.
