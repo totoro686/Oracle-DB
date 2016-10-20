@@ -1,7 +1,8 @@
 Optimization tips
 This will help to optimize the performance of plsql/sql and also for ease maintenance of the code. 
 a.)	Be aware of your tables’ expected content, data volume and use within the application.
-Reason: Design your table properly by using primary key, constraint, index, partition to define your preferred access path when you use it.
+Reason: Design your table properly by using primary key, constraint, index, partition to define your preferred
+access path when you use it.
 b.)	Be careful of using the bind variable (PL/SQL variables, constants and parameters) because it could slow down your performance Use literal value if possible in OLAP environment. 
 Reason: The optimizer will use bind variable peeking to generate the execution plan and if the data in table is skew this may cause a bad execution plan. To use literal value in the SQL can avoid this. Be notes, this is an OLAP environment, so time saving from getting the right/correct execution plan is much more compared to the hard parse. 
 c.)	Use LIKE “%...” with caution
@@ -15,12 +16,11 @@ Reason: Any cursors left open can consume additional system Global Area memory s
  
 f.)	 Try to use CASE rather than DECODE
 Reason: DECODE is an old function that has been replaced by the easier-to-understand and more common CASE function. 
-g.)	 Try to use the function to implement the logic that is commonly 
-used/shared.
+g.)	 Try to use the function to implement the logic that is commonly used/shared.
 This will help the developer to avoid writing the same logic again and again so will reduce the chance of making mistakes also reduce the development time. 
 But using this kind of design ONLY in case the logic is COMMON and can be re-used because if not there are several flaws for this kind of design:
 1. To the code readers, it makes the logic trace harder because it required developer to go through the code up and down to understand the logic so it waste lots of time to map the parameter and the real value when doing debug.
-  2. To the code writer, it takes more time to do coding this way (if putting no-repeat logic that cannot be shared in this way).
+2. To the code writer, it takes more time to do coding this way (if putting no-repeat logic that cannot be shared in this way).
 3. Performance, although the function is in the package, it still requires some extra work compared to doing the logic directly.
  
 h.)	Learn to use the WITH clause. 
@@ -38,6 +38,7 @@ Step 2. Join it as a normal table
 A loop dependency example: 
 Table A refer to Table B, and Table C refer to table B, also Table C refer to A 
 A dead lock happen if we have loop dependency like this.
+
 
 1. Do not use the set operator UNION if the objective can be achieved through an UNION ALL. UNION incurs an extra sort operation which can be avoided.
 
