@@ -4,4 +4,9 @@
    then it would tend to pick smaller tables over larger tables as driving tables regardless of filtering criteria.
 
 
-2. 
+2. for the using of hard parse and soft parse in data warehouse
+   in the oracle, we should avoid to use soft parse, but in the Data warehouse, we do not recommend to avoid to use hard parse. for example
+   for the different site, like HK and MY. In the HK site, we have more than 1,000,000,000 data volumn, but in the MY site, we just have
+   100,000 data volumn. If we use the soft parse, it will have the same execution plan, but it will cause some problem.
+   
+3. 
