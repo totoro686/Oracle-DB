@@ -56,4 +56,31 @@ CREATE TABLE table_name(  BUSINESS_DATE     DATE             �
                              SUBPARTITION P_20120930_SUBBN VALUES ('BN')      
                                 TABLESPACE tablespace_name,    
                              SUBPARTITION P_20120930_SUBCN VALUES ('CN')      
-                                TABLESPACE tablespace_name          
+                                TABLESPACE tablespace_name   ),
+                            PARTITION P_20121030 VALUES LESS THAN (TO_DATE(' 2012-11-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))                               
+                            COMPRESS FOR OLTP                                
+                            TABLESPACE tablespace_name                               
+                            PCTFREE    10                               
+                            INITRANS   1                               
+                            MAXTRANS   255                               
+                            STORAGE    (                                                       
+                                        INITIAL          64K                                                       
+                                        NEXT             1M                                                       
+                                        MAXSIZE          UNLIMITED                                                       
+                                        MINEXTENTS       1                                                       
+                                        MAXEXTENTS       UNLIMITED                                                       
+                                        PCTINCREASE      0                                                       
+                                        BUFFER_POOL      DEFAULT               )                             
+                           ( SUBPARTITION P_20121030_SUBAU VALUES ('AU')                                      
+                                TABLESPACE tablespace_name,                                 
+                             SUBPARTITION P_20121030_SUBBD VALUES ('BD')                                      
+                                TABLESPACE tablespace_name,                                 
+                             SUBPARTITION P_20121030_SUBBN VALUES ('BN')                                      
+                                TABLESPACE tablespace_name,                                 
+                             SUBPARTITION P_20121030_SUBCN VALUES ('CN')                                      
+                                TABLESPACE tablespace_name   )
+  )
+  NOCACHE
+  MONITORING;
+  
+  
