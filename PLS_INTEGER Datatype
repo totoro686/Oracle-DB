@@ -1,0 +1,14 @@
+PLS_INTEGER Datatype
+You use the PLS_INTEGER datatype to store signed integers. 
+Its magnitude range is -2147483648 to 2147483647, represented in 32 bits. 
+PLS_INTEGER values require less storage than NUMBER values and NUMBER subtypes. 
+Also, PLS_INTEGER operations use hardware arithmetic, so they are faster than NUMBER operations, which use library arithmetic. 
+For efficiency, use PLS_INTEGER for all calculations that fall within its magnitude range. 
+For calculations outside the range of PLS_INTEGER, you can use the INTEGER datatype.
+
+Note:
+
+The BINARY_INTEGER and PLS_INTEGER datatypes are identical. See "Change to the BINARY_INTEGER Datatype".
+
+When a calculation with two PLS_INTEGER datatypes overflows the magnitude range of PLS_INTEGER, 
+an overflow exception is raised even if the result is assigned to a NUMBER datatype.
