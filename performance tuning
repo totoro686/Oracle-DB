@@ -3,19 +3,40 @@ This will help to optimize the performance of plsql/sql and also for ease mainte
 a.)	Be aware of your tables’ expected content, data volume and use within the application.
 Reason: Design your table properly by using primary key, constraint, index, partition to define your preferred
 access path when you use it.
-b.)	Be careful of using the bind variable (PL/SQL variables, constants and parameters) because it could slow down your performance Use literal value if possible in OLAP environment. 
-Reason: The optimizer will use bind variable peeking to generate the execution plan and if the data in table is skew this may cause a bad execution plan. To use literal value in the SQL can avoid this. Be notes, this is an OLAP environment, so time saving from getting the right/correct execution plan is much more compared to the hard parse. 
+b.)	Be careful of using the bind variable (PL/SQL variables, constants and parameters) because it could slow down your performance 
+Use literal value if possible in OLAP environment. 
+Reason: The optimizer will use bind variable peeking to generate the execution plan and if the data in table is skew this may cause a 
+bad execution plan. To use literal value in the SQL can avoid this. Be notes, this is an OLAP environment, so time saving from getting 
+the right/correct execution plan is much more compared to the hard parse. 
 c.)	Use LIKE “%...” with caution
 Try to avoid the pattern that begins with the wildcard character “%”.
 Reason: If there is an index for this column, the statement using like “%..” will not be able to use the index.
-d.)	Using BULK COLLECT whenever you need to put data in the ARRAY. 
-Reason: This will help you gain better performance by avoiding too frequently engine switch. 
+d.)	Using BULK COLLECT whenever you need to put data in the ARRAY. For example, load ing 100 millions of rows into FACT table in our 
+DATA WAREHOUSE, if we load 1 million as one time, it will with the following error:
+ERROR at line 1:  
+       ORA-04030: out of process memory when trying to allocate 16408 bytes (koh-kghu  call ,pmucalm coll)  
+       ORA-06512: at "VVA.BULKLOAD", line 66  
+       ORA-06512: at line 1  We got the same error even with 1 million rows.  
+       We do have the following configuration:  
+             SGA - 8.2 GB  
+             PGA 
+              - Aggregate Target - 3GB  
+              - Current Allocated - 439444KB (439 MB)  
+              - Maximum allocated - 2695753 KB (2.6 GB)  
+              - Temp Table Space - 60.9 GB (Total)  
+              - 20 GB (Available approximately)  
+      I think we do have more than enough memory to process the 1 million rows!!  
+Reason: This will help you gain better performance by avoiding too frequently engine switch. No standard to set the limit value, it depends on
+the size of the PGA.
  
 e.)	Always Close locally opened cursor
-Reason: Any cursors left open can consume additional system Global Area memory space within the database instance, potentially in both the shared and private SQL pools. Furthermore, failure to explicitly close cursors may also cause the owning session to exceed its maximum limit of open cursors and trigger the Oracle Error “ORA-01000 maximum open cursors exceeded”. 
+Reason: Any cursors left open can consume additional system Global Area memory space within the database instance, 
+potentially in both the shared and private SQL pools. Furthermore, failure to explicitly close cursors may also cause the owning session
+to exceed its maximum limit of open cursors and trigger the Oracle Error “ORA-01000 maximum open cursors exceeded”. 
  
 f.)	 Try to use CASE rather than DECODE
 Reason: DECODE is an old function that has been replaced by the easier-to-understand and more common CASE function. 
+
 g.)	 Try to use the function to implement the logic that is commonly used/shared.
 This will help the developer to avoid writing the same logic again and again so will reduce the chance of making mistakes also reduce the development time. 
 But using this kind of design ONLY in case the logic is COMMON and can be re-used because if not there are several flaws for this kind of design:
