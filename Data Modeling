@@ -1,0 +1,161 @@
+The system receives data from different systems and then loads them into data warehouse. 
+
+Using different data layers to store these data for different purpose. 
+
+Let’s take an example of a data flow.
+ 
+The data flow starting from the bottom to the top.
+
+1.1 Staging Data Store Layer
+
+The first layer in the database is the Staging
+Data Store layer.  The Java side
+monitor a file coming and then start the cleanser/simple transformation
+(normally this involves remove the unused column, do simple transformation like
+currency standardization, etc.). 
+
+After that, the Java application passes the data to the database and if the data has
+a dependency with other files before goes into the Data Warehouse Layer, then it will be stored in the Staging Data Store layer. 
+
+It will wait until the dependency
+requirement has been met and then these data will be processed into the Data warehouse layer together with its dependency group members.
+
+In this case, we have files named
+AB/AC (both have the same data file data layout) and the data from these 2 files will be stored in a Staging table. 
+
+We also have a file named TTPDCTP which have dependency with AC/AD; it will also be stored in a staging table.
+
+
+
+1.2 Data Warehouse Store
+
+The Second layer is Data Warehouse Store layer.
+This layer stores the most detailed data and the data is organized to follow the business entities, so basically this
+layer will contain all the data that needed for the reports. 
+
+Normally there are two ways to have data into this layer, one is from the source file directly , in this example,
+MPESPTP (FX Trade Data) will go to Datawarehouse_Trade (dimension) table directly, another way is the more common, we
+combine/aggregate the data from Staging Data Store Layer and load them into the Data Warehouse Store Layer. 
+
+So basically, what we have in the data warehouse layer are: Dimension tables (trade, counterparty, book,.etc. ) 
+and table with FACTs in it (face_table in this example). 
+
+Dimension table will be created and stored as SCD table eventually, this means it will contain all the history data for each ID, 
+like trade, each time an attribute of a trade changed, and it will add a new version of this trade into the table and mark it as 
+the latest version of this trade.
+
+But for now, it only contain the latest version of the dimension records in the table and audit to help us track the
+change history .
+
+In terms of table with FACTs in it, to be precisely, the physical table contains FACT doesn’t necessarily be physically built as the
+< FACT Table>. 
+
+For example, we have table face_table which contain the FACT data of the balance received from Hub and FTP. But the
+physical table doesn’t have bitmap index on it and it won’t be the core table of a STAR Schema. I will explain more
+in the Data Mart Store Layer. 
+
+2.3 Data Mart Store Layer
+
+The difference between a data warehouse and a data mart can be confusing because the two terms are sometimes used incorrectly as 
+synonyms. 
+
+A data warehouse is a central repository for all an organization's data. 
+
+The goal of a data mart, however, is to meet the particular demands of a specific group of users within the organization. 
+
+Generally, an organization's data marts are subsets of the organization's data warehouse.
+
+What we have in this layer are Data Mart tables that servers for different reports. In this example, we have face_table_PIVOT  that
+contain aggregate data from face_table.
+
+The Data Mart table is designed as the core of star schema. It has below aspects:
+
+
+It has foreign key link to the dimension tables, the foreign key column contains the surrogate key (instead of
+the real key in the business) which generated during the data loading of dimension table.
+
+It builds the index on the foreign key columns in order to boost the performance by using star transformation.
+
+It store data with portioned by business day AND site_code per our need.
+
+Star schemas characteristically consist of Fact table linked to associated dimension tables
+via primary/foreign key relationships.
+
+The star schema is perhaps the simplest data warehouse schema. It is called a star schema because the entity-relationship diagram of 
+this schema resembles a star, with points radiating from a central table. The center of the star consists of a large fact table and 
+the points of the star are the dimension tables.
+
+A star query is a join between a fact table and a number of dimension tables. Each dimension table is joined to the fact table using a 
+primary key to foreign key join, but the dimension tables are not joined to each other. The optimizer recognizes
+star queries and generates efficient execution plans for them.
+
+An example of Star Schema: 
+
+The main advantages of star schemas are:
+
+It provides a direct and intuitive mapping between the business entities being analyzed by end users and the schema design.
+
+It provides highly optimized performance for typical star queries.
+
+Also, we use partition table to store the data of this table, partition method is range-list partition, main partition by
+process day, sub partition by site.
+
+1.4 Extract Store 
+
+This layer contain the data for report, in this example, we have table for report.
+
+From the data flow perspective, the data is come from the Data Mart Layer.
+
+We use partition table to store the data of this table, partition method is range-list partition, main partition by process
+day, sub partition by site.  
+
+In this way, beside the performance improvement, we can also avoid the contention of data blcok when different sites are generating the 
+report concurrently and make it easy for the housekeeping.
+
+
+
+Useful features introduction on database framework
+
+The Data Unloader Framework
+
+We have built a framework called data unloader to speed up the file generation part, by using the NAS storage that linked to both
+database server and application server, we use utl_file to write files into the NAS and application user with read only access can 
+read the files and send them to downstream users.
+
+The partition strategy and partition management
+
+For table storedin the Data Warehouse Layer and Data Mart Layer, normally these tables are partitioned first by process day, then 
+sub partitioned by site code.
+
+The purposes to design the table like this are for easy management and better performance.
+
+Each day, before the data loading, it will call a function to check if today’s partition exists or not. If already exists, then this 
+is a re-run case, call the function to clear the sub partition’s data to support re-run scenario. 
+
+If not exist, will call another function to add a new partition together with all the sub
+partitions based on the sub partition template.
+
+We are not using the Interval partition way because the partition name is generated by Oracle itself, we can’t predict the partition 
+name and sub partition name and this make it harder to do partition cleaning and partition exchange in future.
+
+The locking mechanism We have a feature to sequential our operations in order to avoid deadlock issue or other problems that can be 
+triggered by parallel execution. Example: to show the code of the lock and how to use it. Related Package: pg_lock 
+
+The statistics gathering method
+It's very critical to have the table/index's statistics up to date for oracle to generate a good execution plan. 
+But it's also very time/resource consuming because we do it every day for every table. 
+To solve this problem , we implement a feature named "statistics copy" in our system, this is based on a fact that each day the data 
+volume we loaded into our tables are similar. 
+
+The session's environment parameter
+There are 2 parameters we used it in almost everywhere, the business date and the site code.To avoid
+repeat initialize it in every package/procedure/function/triggers, we use a package to keep the session level parameters.Each
+session will setup its own parameters as below showed as the beginning and it
+also setup the session identifier so you can check the running session status
+by simply look at the v$session.A useful
+view called dc_v_node_monitor was built based on this.  Related Package:
+pg_complex_transformer_run
+
+The logging feature
+We have implemented a very detailed logging mechanism in the system, by using it, you can easily log every operation with the elapsed 
+time of this step.Related Package: pg_log
