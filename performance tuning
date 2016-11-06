@@ -26,8 +26,8 @@ ERROR at line 1:
               - Temp Table Space - 60.9 GB (Total)  
               - 20 GB (Available approximately)  
       I think we do have more than enough memory to process the 1 million rows!!  
-Reason: This will help you gain better performance by avoiding too frequently engine switch. No standard to set the limit value, it depends on
-the size of the PGA.
+Reason: This will help you gain better performance by avoiding too frequently engine switch. No standard to set the limit value, it 
+depends on the size of the PGA.
  
 e.)	Always Close locally opened cursor
 Reason: Any cursors left open can consume additional system Global Area memory space within the database instance, 
@@ -38,94 +38,93 @@ f.)	 Try to use CASE rather than DECODE
 Reason: DECODE is an old function that has been replaced by the easier-to-understand and more common CASE function. 
 
 g.)	 Try to use the function to implement the logic that is commonly used/shared.
-This will help the developer to avoid writing the same logic again and again so will reduce the chance of making mistakes also reduce the development time. 
-But using this kind of design ONLY in case the logic is COMMON and can be re-used because if not there are several flaws for this kind of design:
-1. To the code readers, it makes the logic trace harder because it required developer to go through the code up and down to understand the logic so it waste lots of time to map the parameter and the real value when doing debug.
+This will help the developer to avoid writing the same logic again and again so will reduce the chance of making mistakes also reduce 
+the development time. But using this kind of design ONLY in case the logic is COMMON and can be re-used because if not there are 
+several flaws for this kind of design:
+1. To the code readers, it makes the logic trace harder because it required developer to go through the code up and down to understand 
+the logic so it waste lots of time to map the parameter and the real value when doing debug.
 2. To the code writer, it takes more time to do coding this way (if putting no-repeat logic that cannot be shared in this way).
 3. Performance, although the function is in the package, it still requires some extra work compared to doing the logic directly.
  
 h.)	Learn to use the WITH clause. 
 WITH clause can be used to reduce repetition and simplify complex SQL statements. 
-The advantage is that repeated references to the sub query may be more efficient as the data is easily retrieved from the temporary table, rather than being required by each reference. 
-You should assess the performance implications of the WITH clause on a case-by-case basis, if the result set from the sub query is very large, it’s may be not a good idea to do so, the alternative is to create an intermediate table and store the data permanently for others to use.
+The advantage is that repeated references to the sub query may be more efficient as the data is easily retrieved from the temporary 
+table, rather than being required by each reference. You should assess the performance implications of the WITH clause on a case-by-case
+basis, if the result set from the sub query is very large, it’s may be not a good idea to do so, the alternative is to create an 
+intermediate table and store the data permanently for others to use.
 Step 1. Use the WITH..AS to materialize the sub query result set
- 
 Step 2. Join it as a normal table 
  
  
-5.	The usage of foreign keys
+i.)	The usage of foreign keys
 1. When creating foreign keys on a table, you must create an index on the foreign keys columns
 2. Be careful when creating foreign keys , we shouldn't have loop dependency using foreign keys. 
 A loop dependency example: 
 Table A refer to Table B, and Table C refer to table B, also Table C refer to A 
 A dead lock happen if we have loop dependency like this.
 
-
-1. Do not use the set operator UNION if the objective can be achieved through an UNION ALL. UNION incurs an extra sort operation which can be avoided.
-
-2. Select ONLY those columns in a query which are required. Extra columns which are not actually used, incur more I/O on the database and increase network traffic.
-
-3. Do not use the keyword DISTINCT if the objective can be achieved otherwise. DISTINCT incurs an extra sort operation and therefore slows your queries down.
-
-4. If it is required to use a composite index, try to use the “Leading” column in the “WHERE” clause. Though Index skip scan is possible, it incurs extra cost in creating virtual indexes and may not be always possible depending on the cardinality of the leading columns.
-
-5. There should not be any Cartesian product in the query unless there is a definite requirement to do so. I know this is a silly point but we all have done this mistake at one point 🙂
-
-6. Wherever multiple tables are used, always refer to a column by either using an alias or using the fully qualified name. Do not leave the guess work for Oracle.
-
-7. SQL statements should be formatted consistently (e.g the keywords should be in CAPS only) to aid readability. Now, this is not a performance tip really. However, it’s important and part of the practices.
-
-8. If possible use bind variables instead of constant/literal values in the predicate filter conditions to reduce repeated parsing of the same statement.
-
+How to improve the performance of SQL
+1. Do not use the set operator UNION if the objective can be achieved through an UNION ALL. UNION incurs an extra sort operation 
+which can be avoided.
+2. Select ONLY those columns in a query which are required. Extra columns which are not actually used, incur more I/O on the database 
+and increase network traffic.
+3. Do not use the keyword DISTINCT if the objective can be achieved otherwise. DISTINCT incurs an extra sort operation and therefore 
+slows your queries down.
+4. If it is required to use a composite index, try to use the “Leading” column in the “WHERE” clause. Though Index skip scan is 
+possible, it incurs extra cost in creating virtual indexes and may not be always possible depending on the cardinality of the leading 
+columns.
+5. There should not be any Cartesian product in the query unless there is a definite requirement to do so. I know this is a silly point 
+but we all have done this mistake at one point.
+6. Wherever multiple tables are used, always refer to a column by either using an alias or using the fully qualified name. Do not 
+leave the guess work for Oracle.
+7. SQL statements should be formatted consistently (e.g the keywords should be in CAPS only) to aid readability. Now, this is not a 
+performance tip really. However, it’s important and part of the practices.
+8. If possible use bind variables instead of constant/literal values in the predicate filter conditions to reduce repeated parsing of 
+the same statement.
 9. Use meaningful aliases for tables/views
-
-10. When writing sub-queries make use of the EXISTS operator where possible as Oracle knows that once a match has been found it can stop and avoid a full table scan (it does a SEMI JOIN).
-
+10. When writing sub-queries make use of the EXISTS operator where possible as Oracle knows that once a match has been found it can 
+stop and avoid a full table scan (it does a SEMI JOIN).
 11. If the selective predicate is in the sub query, then use IN.
-
 12. If the selective predicate is in the parent query, then use EXISTS.
-
-13. Do not modify indexed columns with functions such as RTRIM, TO_CHAR, UPPER, TRUNC as this will prevent the optimizer from identifying the index. If possible perform the modification on the constant side of the condition. If the indexed column is usually accessed through a function (e.g NVL), consider creating a function based index.
-
-14. Try to use an index if less than 5% of the data needs to be accessed from a data set. The exception is a small table (a few hundred rows) which is usually best accessed through a FULL table scan irrespective of the percentage of data required.
-
+13. Do not modify indexed columns with functions such as RTRIM, TO_CHAR, UPPER, TRUNC as this will prevent the optimizer from 
+identifying the index. If possible perform the modification on the constant side of the condition. If the indexed column is usually 
+accessed through a function (e.g NVL), consider creating a function based index.
+14. Try to use an index if less than 5% of the data needs to be accessed from a data set. The exception is a small table (a few hundred 
+rows) which is usually best accessed through a FULL table scan irrespective of the percentage of data required.
 15. Use equi-joins whenever possible, they improve SQL efficiency
-
 16. Avoid the following kinds of complex expressions:
-
 NVL (col1,-999) = ….
-TO_DATE(), TO_NUMBER(), and so on
-These expressions prevent the optimizer from assigning valid cardinality or selectivity estimates and can in turn affect the overall plan and the join method
-
-17. It is always better to write separate SQL statements for different tasks, but if you must use one SQL statement, then you can make a very complex statement slightly less complex by using the UNION ALL operator
-
-18. Joins to complex views are not recommended, particularly joins from one complex view to another. Often this results in the entire view being instantiated, and then the query is run against the view data
-
-19. Querying from a view requires all tables from the view to be accessed for the data to be returned. If that is not required, then do not use the view. Instead, use the base table(s), or if necessary, define a new view.
-
-20. While querying on a partitioned table try to use the partition key in the “WHERE” clause if possible. This will ensure partition pruning.
-
+TO_DATE(), TO_NUMBER(), and so on 
+These expressions prevent the optimizer from assigning valid cardinality or selectivity estimates and can in turn affect the overall 
+plan and the join method
+17. It is always better to write separate SQL statements for different tasks, but if you must use one SQL statement, then you can make 
+a very complex statement slightly less complex by using the UNION ALL operator
+18. Joins to complex views are not recommended, particularly joins from one complex view to another. Often this results in the entire 
+view being instantiated, and then the query is run against the view data
+19. Querying from a view requires all tables from the view to be accessed for the data to be returned. If that is not required, then 
+do not use the view. Instead, use the base table(s), or if necessary, define a new view.
+20. While querying on a partitioned table try to use the partition key in the “WHERE” clause if possible. This will ensure partition 
+pruning.
 21. Consider using the PARALLEL hint (only when additional resources can be allocated) while accessing large data sets.
-
 22. Avoid doing an ORDER BY on a large data set especially if the response time is important.
-
-23. Consider changing the OPTIMIZER MODE to FIRST_ROWS(n) if the response time is important. The default is ALL_ROWS which gives better throughput.
-
-24. Use CASE statements instead of DECODE (especially where nested DECODEs are involved) because they increase the readability of the query immensely.
-
+23. Consider changing the OPTIMIZER MODE to FIRST_ROWS(n) if the response time is important. The default is ALL_ROWS which gives 
+better throughput.
+24. Use CASE statements instead of DECODE (especially where nested DECODEs are involved) because they increase the readability of 
+the query immensely.
 25. Do not use HINTS unless the performance gains clear.
-
 26. Check if the statistics for the objects used in the query are up to date. If not, use the DBMS_STATS package to collect the same.
-
-27. It is always good to understand the data both functionally and it’s diversity and volume in order to tune the query. Selectivity (predicate) and Cardinality (skew) factors have a big impact on query plan. Use of Statistics and Histograms can drive the query towards a better plan.
-
-28. Read explain plan and try to make largest restriction (filter) as the driving site for the query, followed by the next largest, this will minimize the time spent on I/O and execution in subsequent phases of the plan.
-
-29. If Query requires quick response rather than good throughput is the objective, try to avoid sorts (group by, order by, etc.). For good throughput, optimizer mode should be set to ALL ROWS.
-
-30. Queries tend to perform worse as they age due to volume increase, structural changes in the database and application, upgrades etc. Use Automatic Workload Repository (AWR) and Automatic Database Diagnostic Monitor (ADDM) to better understand change in execution plan and throughput of top queries over a period of time.
-
-31. SQL Tuning Advisor and SQL Access Advisor can be used for system advice on tuning specific SQL and their join and access paths, however, advice generated by these tools may not be always applicable (point 28).
-
-32. SQL Access paths for joins are an component determining query execution time. Hash Joins are preferable when 2 large tables need to be joined. Nested loops make work better when a large table is joined with a small table.
+27. It is always good to understand the data both functionally and it’s diversity and volume in order to tune the query. Selectivity 
+(predicate) and Cardinality (skew) factors have a big impact on query plan. Use of Statistics and Histograms can drive the query towards
+a better plan.
+28. Read explain plan and try to make largest restriction (filter) as the driving site for the query, followed by the next largest, this 
+will minimize the time spent on I/O and execution in subsequent phases of the plan.
+29. If Query requires quick response rather than good throughput is the objective, try to avoid sorts (group by, order by, etc.). For 
+good throughput, optimizer mode should be set to ALL ROWS.
+30. Queries tend to perform worse as they are due to volume increase, structural changes in the database and application, upgrades etc. 
+Use Automatic Workload Repository (AWR) and Automatic Database Diagnostic Monitor (ADDM) to better understand change in execution plan 
+and throughput of top queries over a period of time.
+31. SQL Tuning Advisor and SQL Access Advisor can be used for system advice on tuning specific SQL and their join and access paths, 
+however, advice generated by these tools may not be always applicable (point 28).
+32. SQL Access paths for joins are an component determining query execution time. Hash Joins are preferable when 2 large tables need 
+to be joined. Nested loops make work better when a large table is joined with a small table.
 
