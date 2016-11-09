@@ -66,6 +66,8 @@ A dead lock happen if we have loop dependency like this.
 j.)  before loading 1GB into a table, we usually disable index, because Oracle DB will also maintain the index int this process. After
 disable the index, we can improve preformance.
 
+h.) table compression
+
 
 
 
