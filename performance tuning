@@ -63,6 +63,14 @@ A loop dependency example:
 Table A refer to Table B, and Table C refer to table B, also Table C refer to A 
 A dead lock happen if we have loop dependency like this.
 
+j.)  before loading 1GB into a table, we usually disable index, because Oracle DB will also maintain the index int this process. After
+disable the index, we can improve preformance.
+
+
+
+
+
+
 How to improve the performance of SQL
 1. Do not use the set operator UNION if the objective can be achieved through an UNION ALL. UNION incurs an extra sort operation 
 which can be avoided.
