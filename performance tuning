@@ -98,6 +98,24 @@ amount of code written, however the gains that are made in code readability far 
                        dept
                 WHERE dept.deptno = emp.deptno;         
 
+1.15）DML error logging
+      This feature provides a mechanism for preventing your one million row insert from failing because a few rows had problems.
+         1). Create the Error Log table using DBMA_ERRLOG.CREATE_ERROR_LOG
+         2). Specify the LOG ERRORS clause on the INSERT.
+
+      In real life, the Reject Limit would generally be set to UNLIMITED.   
+
+      The DBMS_ERRLOG package provides a procedure that enables you to create an error logging table so that DML operations can continue after encountering errors rather than abort and roll back. This enables you to save time and system resources.
+
+      CREATE_ERROR_LOG Procedure：This procedure creates the error logging table needed to use the DML error logging capability. LONG, CLOB, BLOB, BFILE, and ADT datatypes are not supported in the columns.
+
+      INSERT /*+ APPEND */ INTO table_name SUBPARTITION( subpartition_name ) 
+        SELECT * FROM table_name WHERE business_date= '2016-01-01'' AND site_code= 'CN' LOG ERRORS REJECT LIMIT UNLIMITED;
+
+
+reference link: http://www.voidcn.com/blog/fsldg/article/p-1186874.html
+                http://docs.oracle.com/database/121/ARPLS/d_errlog.htm#ARPLS66324
+                http://docs.oracle.com/database/121/ADMIN/tables.htm#ADMIN-GUID-36DB026B-4702-477A-92C4-EA2795D2B37F
 
 
 
