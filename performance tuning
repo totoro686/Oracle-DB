@@ -70,51 +70,33 @@ A dead lock happen if we have loop dependency like this.
 
 1.12) Usw ANSI way to join tables in the query
 
-Although in most cases the execution paths for equivalent
-ANSI and Oracle syntax queries will be the same (exception being the FULL OUTER
-JOIN), the advantage of adopting the ANSI JOIN syntax is code readability and
-maintainability. It can be argued that using ANSI JOIN syntax increases the
-amount of code written, however the gains that are made in code readability far
-out-weigh this disadvantage as it allows one to separate the logic of joining
-datasets from the logic of filtering of datasets from the logic of filtering of datasets.
+Although in most cases the execution paths for equivalent ANSI and Oracle syntax queries will be the same (exception being the FULL OUTER JOIN), the advantage of adopting the ANSI JOIN syntax is code readability and maintainability. It can be argued that using ANSI JOIN syntax increases the
+amount of code written, however the gains that are made in code readability far out-weigh this disadvantage as it allows one to separate the logic of joining datasets from the logic of filtering of datasets from the logic of filtering of datasets.
 
+1.13)  There are two basic methods that Oracle uses for inserts. 
+         The slow way is usually called conventional. With this mechanism, the data goes through the buffer cache, empty space in existing blocks is reused, undo is generated for all data and metadata changes, and redo is generated for all changes by default. This is a lot of work. That's why I call it the slow way.
 
-SELECT DISTINCT
+         The fast way is also called direct path. This mechod does not look for space in existing blocks, it just starts inserting data above the hight water mark. It protects the data dictionary with undo and redo for metedata changes but it generates no undo for data changes. It can also avoid redo generation for data chnages in some cases. Direct path inserts can be invoked by using the APPEND hint.
+             There are a few issues with the fast approach, however.
+             1) Only one direct path write can be occurring on a table at any given time.
+             2) Data will be inserted above the high water mark, so any available space in the blocks below the high water mark will not be used by the direct path inserts.
+             3) The session that performs the insert append can't do anythin with the table after the insert until a commit or rollback is issued.
+             4) Object types, indexed orgnized table, etc are not supported.
+             5) referential constriants are not supported.
 
-      
-e.id_entity,
-
-      
-SUBSTR (org_code, 1, 3) AS department_code,
-
-      
-SUBSTR (org_code, 4, 2) AS section_code,
-
-       CASE
-WHEN accounting_method_type = 'T' THEN 'T' ELSE 'B' END
-
-         
-AS banking_trading_indicator
-
-FROM stg_v_gfdm_deal d
-
-       JOIN
-dw_d_entity e
-
-             
-ON l_correct_country_code = e.country_code
-
-            
-AND d.group_member = e.group_member
-
-            
-AND d.company_code = e.branch_number
-
-WHERE d.business_date = ctr.business_date AND
-d.site_code = ctr.site_code;
-
-
-1.13)  
+1.14) semi-join - is join between two sets of data where rows from the first set are returned, based on the presence or absence of at least one 
+                  matching row in the other set.
+      anti-join - returns rowd from the left side of the predicate for which there are no corresponding rows on the right side of the predicate. 
+                  It eturns rows that fail to match the subquery on the right side.   
+      inline view - An inline view is a SELECT statement in the FROM-clause of another SELECT statement. In-line views are commonly used to 
+                    simplify complex queries by removing join operations and condensing several separate queries into a single query. 
+               Example for inline view:     
+               SELECT * 
+                  FROM ( SELECT deptno, count(*) emp_count
+                         FROM emp
+                         GROUP BY deptno ) emp,
+                       dept
+                WHERE dept.deptno = emp.deptno;         
 
 
 
