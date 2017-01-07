@@ -117,7 +117,23 @@ reference link: http://www.voidcn.com/blog/fsldg/article/p-1186874.html
                 http://docs.oracle.com/database/121/ARPLS/d_errlog.htm#ARPLS66324
                 http://docs.oracle.com/database/121/ADMIN/tables.htm#ADMIN-GUID-36DB026B-4702-477A-92C4-EA2795D2B37F
 
+1.16) In other words, why do we have to wait for the enq: RO – fast object reuse wait event 
+      (and in 11.2 the enq: CR – block range reuse ckpt wait) when dropping & truncating segments?
+      
+      Imagine this:
+ 
 
+    You have a large buffer cache and you drop table A without checkpointing the dirty buffers.  
+    Immediately after the drop succeeds (some buffers are still dirty in cache) some other segment (table B) reuses that space for itself and writes stuff into it.
+    A few seconds later, DBWR wakes up to find & write some dirty buffers to disk (anything it finds from its lists). As there are some old & dirty blocks of table A still in the cache, they get written to disk too, overwriting some of the new table B blocks!
+
+  
+
+So, this is one reason why you should checkpoint the blocks to disk before dropping (or truncating) a segment. Of course you might ask that why doesn’t DBWR just check whether the dirty buffer is part of an existing object or a dropped one when it walks through its dirty list? It could just discard the dirty buffers of dropped objects it finds. It would be doable – but I also think it would get quite complex. DBWR is a low level background proces, understanding the cache layer and dealing with physical datablocks in a file# = X block offset = Y. It doesn’t really know anything about the segments/objects which use these blocks. If it should start checking for logical existence of an object, it would have to start running code to access (a much higher level concept) data dictionary cache – and possibly query data dictionary tables via recursive calls, etc, so making it much more complicated.
+ 
+So, this logic may just be matter of implementation, it’d be too complex to implement such selective discarding of dirty buffers, based on a higher-level concept of existence of a segment or object. Dropping and truncating tables so frequently, that these waits become a serious problem (consuming significant % of response time) indicate a design problem anyway. For example, former SQL server developers creating multiple temporary tables in Oracle – for breaking a complex query down into smaller parts, just like they had been doing it in SQL Server.
+      Solution: alter system flush buffer_cache;
+      reference link: http://blog.tanelpoder.com/2011/07/06/what-is-the-purpose-of-segment-level-checkpoint-before-droptruncate-of-a-table/
 
 
 How to improve the performance of SQL
